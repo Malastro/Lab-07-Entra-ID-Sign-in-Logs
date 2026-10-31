@@ -109,6 +109,8 @@ Tras localizar los eventos correspondientes a Antonio, se identifican tres regis
 
 Los tres eventos muestran un resultado satisfactorio y corresponden a operaciones realizadas sobre Microsoft Graph.
 
+![SignInLogs](screenshots/01_SignInLogs.png)
+
 #### 1.3. Análisis de los detalles de autenticación
 
 Se selecciona uno de los eventos de My Profile para examinar sus detalles.
@@ -123,6 +125,8 @@ En el apartado Authentication Details se obtiene la siguiente información:
 
 El requisito de autenticación multifactor aparece satisfecho mediante una claim incluida en el token. Esto indica que Microsoft Entra ha reconocido una evidencia MFA previamente satisfecha, sin que el registro demuestre que se haya realizado un nuevo desafío MFA durante este evento.
 
+![BasicInfo](screenshots/02_BasicInfo.png)
+
 #### 1.4. Comprobación de Acceso Condicional
 
 En el apartado Conditional Access se identifica la siguiente política:
@@ -134,6 +138,8 @@ En el apartado Conditional Access se identifica la siguiente política:
 | Result | Completed successfully |
 
 La política de Acceso Condicional se ha evaluado correctamente y el requisito de autenticación multifactor se ha satisfecho, permitiendo continuar con el acceso.
+
+![CA](screenshots/03_CA.png)
 
 #### 1.5. Resultado de la prueba
 
