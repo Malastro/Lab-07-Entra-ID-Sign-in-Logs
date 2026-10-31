@@ -125,7 +125,7 @@ En el apartado Authentication Details se obtiene la siguiente información:
 
 El requisito de autenticación multifactor aparece satisfecho mediante una claim incluida en el token. Esto indica que Microsoft Entra ha reconocido una evidencia MFA previamente satisfecha, sin que el registro demuestre que se haya realizado un nuevo desafío MFA durante este evento.
 
-![BasicInfo](screenshots/02_BasicInfo.png)
+![BasicInfo](screenshots/04_AuthDetails.png)
 
 #### 1.4. Comprobación de Acceso Condicional
 
