@@ -334,4 +334,93 @@ La comparación demuestra la importancia de analizar los detalles de autenticaci
 
 Esta prueba establece una referencia para las siguientes fases del laboratorio, en las que se investigarán otros escenarios de autenticación y los controles de seguridad asociados.
 
+### 5. T04 – Conditional Access Block Test
+
+#### 5.1. Objetivo de la prueba
+
+El objetivo de esta prueba es comprobar cómo una política de **Conditional Access** puede impedir el acceso a una aplicación incluso cuando el usuario introduce correctamente sus credenciales.
+
+Para ello, se creó una política adicional denominada `CA-Montepinar-Block-Test`, sin modificar la política original `CA-Montepinar-MFA`.
+
+La política se configuró con los siguientes parámetros:
+
+- **Users:** únicamente Antonio Recio (`arecio`).
+- **Exclude:** cuenta administrativa y cuenta de emergencia (*break-glass*).
+- **Target resources:** All cloud apps.
+- **Grant:** Block access.
+- **Initial state:** Report-only.
+
+#### 5.2. Evaluación en modo Report-only
+
+Con la política configurada en modo `Report-only`, se inició sesión con Antonio utilizando la contraseña correcta y completando el proceso de autenticación multifactor.
+
+El acceso se completó correctamente. Sin embargo, en los registros de Conditional Access se observó que la nueva política habría producido un resultado de error si hubiese estado habilitada.
+
+![T04-01 – Conditional Access Report-only](screenshots/T04-01-CA.png)
+
+En el registro se identificaron dos políticas:
+
+| Política | Control | Resultado |
+|---|---|---|
+| `CA-Montepinar-MFA` | MFA | Completado correctamente |
+| `CA-Montepinar-Block-Test` | Block | Solo informe: error |
+
+Esto demuestra que el modo Report-only permite evaluar el impacto de una política sin aplicar realmente el bloqueo al usuario.
+
+### 5.3. Activación de la política y bloqueo del acceso
+
+Una vez comprobado el resultado de la simulación, se cambió el estado de `CA-Montepinar-Block-Test` a `Enabled`.
+
+A continuación, se abrió una nueva sesión privada del navegador y se repitió el inicio de sesión con Antonio, utilizando nuevamente la contraseña correcta.
+
+Esta vez, Microsoft Entra ID impidió el acceso y mostró el siguiente mensaje:
+
+> No tiene permiso para acceder a este recurso. Ha iniciado sesión correctamente, pero no tiene permiso para acceder a este recurso.
+
+![T04-02 – Access denied](screenshots/T04-02-AuthDetails.png)
+
+#### 5.4. Análisis de los registros de inicio de sesión
+
+Tras localizar el evento correspondiente en **Sign-in logs**, se identificaron los siguientes datos:
+
+| Campo | Resultado |
+|---|---|
+| Status | Error |
+| Sign-in error code | `53003` |
+| Failure reason | Access has been blocked by Conditional Access policies |
+| Authentication requirement | Multi-factor authentication |
+
+El código `53003` indica que el acceso ha sido bloqueado por una política de Conditional Access, impidiendo la emisión del token de acceso.
+
+En el apartado **Authentication Details** se comprobó que la contraseña había sido validada correctamente:
+
+| Método | Detalle | Resultado |
+|---|---|---|
+| Password | Password Hash Sync | Succeeded: Yes |
+
+El registro mostraba también un segundo valor `No`, pero no proporcionaba información suficiente para identificar el método o interpretar de forma concluyente ese paso. Por tanto, no se atribuye a esta prueba una confirmación de MFA completado.
+
+![T04-03 – Conditional Access blocked](screenshots/T04-03-CA.png)
+
+Los resultados mostraron:
+
+| Política | Control | Resultado |
+|---|---|---|
+| `CA-Montepinar-MFA` | MFA | Error |
+| `CA-Montepinar-Block-Test` | Block | Error |
+
+La política `CA-Montepinar-Block-Test` aplicó el control de bloqueo configurado. El código `53003` y el motivo del fallo confirman que Conditional Access impidió el acceso.
+
+#### 5.5. Conclusiones
+
+Esta prueba permitió comprobar la diferencia entre los modos **Report-only** y **Enabled** de Conditional Access:
+
+- **Report-only:** evalúa el impacto de una política sin bloquear realmente el acceso.
+- **Enabled:** aplica los controles configurados y puede impedir la emisión de tokens.
+- Una contraseña correcta no garantiza que el usuario pueda acceder al recurso.
+- El código `53003` permite identificar un bloqueo provocado por políticas de Conditional Access.
+
+Finalmente, la política `CA-Montepinar-Block-Test` se devolvió al estado `Report-only` para evitar mantener un bloqueo activo en el entorno de laboratorio.
+
+La prueba demuestra la importancia de evaluar las políticas mediante Report-only antes de habilitarlas en un entorno real, reduciendo el riesgo de bloquear accesos legítimos.
 
