@@ -59,6 +59,8 @@ Contiene las capturas de pantalla que documentan las distintas fases de implemen
 
 Así, Antonio podrá dejar de sospechar de todos los vecinos por igual y descubrir qué ha ocurrido realmente con su identidad. Porque en Montepinar se puede acusar a cualquiera, pero en IAM hacen falta evidencias.
 
+**Nota sobre las evidencias:** Las capturas han sido anonimizadas para proteger la información del entorno de laboratorio. Se han añadido anotaciones visuales para destacar los campos relevantes para cada análisis, sin alterar los resultados técnicos originales.
+
 ## 3. Fases de implementación
 
 ### T01. Preparación de la identidad y validación de una autenticación correcta (T01)
@@ -221,4 +223,115 @@ Es importante diferenciar este resultado de un fallo de autenticación multifact
 - Se ha diferenciado un fallo de contraseña de un posible fallo de MFA.
 - Se ha revisado Conditional Access, documentando que el resultado no estaba disponible para este evento.
 
+### 4. T03 — Fallo de autenticación multifactor (MFA)
+
+#### 4.1. Objetivo de la prueba
+
+En esta prueba se analiza un escenario en el que un usuario introduce correctamente sus credenciales, pero no completa el segundo factor de autenticación solicitado por Microsoft Entra ID.
+
+El objetivo es identificar cómo se registra este comportamiento en los Sign-in Logs y comprobar la relación entre la autenticación primaria, la verificación MFA y la política de Acceso Condicional.
+
+En esta ocasión, Antonio Recio consigue validar su contraseña, pero rechaza la solicitud de comprobación recibida en Microsoft Authenticator.
+
+#### 4.2. Ejecución de la prueba
+
+Se utilizó una ventana privada del navegador para iniciar una nueva sesión con la cuenta de Antonio Recio.
+
+Tras introducir la contraseña correcta, Microsoft solicitó una comprobación de identidad mediante Microsoft Authenticator. En el dispositivo móvil se seleccionó la opción «No, no soy yo», rechazando la solicitud de autenticación.
+
+El navegador mostró el mensaje de acceso denegado.
+
+**Evidencia de la solicitud rechazada:**
+
+![Pantalla de solicitud de autenticación denegada](screenshots/T03-01-AuthDenegada.png)
+
+#### 4.3. Basic info — Información general del evento
+
+Una vez localizado el evento en Microsoft Entra ID → Monitoring & health → Sign-in logs → User sign-ins (interactive), se analizaron sus datos generales.
+
+Los principales resultados fueron:
+
+| Campo | Resultado |
+|---|---|
+| Status | `Interrupted` |
+| Authentication requirement | `Multi-factor authentication` |
+| Additional details | `User needs to perform multi-factor authentication` |
+| Fecha del evento | `2026-11-02 16:46:45 UTC` |
+
+El estado `Interrupted` indica que el proceso de inicio de sesión quedó interrumpido porque era necesario completar la autenticación multifactor.
+
+![Basic info - Estado y requisito MFA](screenshots/T03-02-BasicInfo.png)
+
+También se revisaron la aplicación, la aplicación cliente y el recurso asociado al evento para identificar el contexto de la solicitud.
+
+![Basic info - Aplicación, cliente y recurso](screenshots/T03-02.5BasicInfo2.5.png)
+
+#### 4.4. Authentication Details — Detalles de autenticación
+
+El análisis de Authentication Details permitió diferenciar el resultado de la autenticación primaria del resultado de la verificación multifactor.
+
+Se observaron dos pasos:
+
+| Método de autenticación | Detalle | Succeeded | Result detail |
+|---|---|---|---|
+| Password | Password Hash Sync | Yes | Correct password |
+| Mobile app notification | — | No | Authentication in progress |
+
+**Interpretación técnica:**
+
+- **Autenticación primaria:** la contraseña se validó correctamente mediante Password Hash Sync.
+- **Autenticación multifactor:** Microsoft solicitó una notificación en la aplicación móvil, pero este paso no se completó.
+- **Resultado:** el proceso de autenticación quedó interrumpido al no completarse el segundo factor.
+
+Es importante distinguir ambos resultados: el usuario no tuvo un problema de contraseña, sino que no completó el proceso de MFA requerido.
+
+![Authentication Details - Contraseña correcta y MFA incompleto](screenshots/T03-03-AuthDetails.png)
+
+#### 4.5. Conditional Access — Acceso Condicional
+
+Se revisó la política `CA-Montepinar-MFA`, responsable de exigir autenticación multifactor para el acceso.
+
+Los resultados observados fueron:
+
+| Campo | Resultado |
+|---|---|
+| Policy | `CA-Montepinar-MFA` |
+| Grant control | `MFA` |
+| Result | `Error` |
+
+La política exigía MFA como condición para completar el acceso. El resultado `Error` es coherente con el hecho de que el requisito multifactor no llegó a completarse.
+
+No debe interpretarse este resultado, por sí solo, como un error de configuración de la política. Debe analizarse conjuntamente con el estado del inicio de sesión y los detalles de autenticación.
+
+![Conditional Access - CA-Montepinar-MFA](screenshots/T03-04-CA.png)
+
+#### 4.6. Resultado y conclusiones
+
+La investigación permitió identificar un escenario en el que la autenticación primaria se completa correctamente, pero el acceso no llega a concederse porque el proceso MFA queda incompleto.
+
+Los resultados demuestran que:
+
+1. La contraseña del usuario era correcta.
+2. La autenticación primaria se validó mediante Password Hash Sync.
+3. Microsoft Entra ID solicitó una segunda verificación mediante Microsoft Authenticator.
+4. La notificación móvil no se completó.
+5. El inicio de sesión quedó registrado con estado `Interrupted`.
+6. La política `CA-Montepinar-MFA` exigía MFA y mostró un resultado `Error`.
+
+**Conclusión:** una autenticación primaria satisfactoria no implica que el usuario haya conseguido acceder. Cuando una política de Acceso Condicional exige MFA, el usuario debe completar también el segundo factor para satisfacer los requisitos de acceso.
+
+Este escenario permite diferenciar tres situaciones:
+
+| Prueba | Escenario | Resultado |
+|---|---|---|
+| T01 | Autenticación satisfactoria | Success |
+| T02 | Contraseña incorrecta | Error `50126` |
+| T03 | Contraseña correcta, MFA incompleto | Interrupted |
+
+La comparación demuestra la importancia de analizar los detalles de autenticación y no limitar una investigación al estado general del evento.
+
+---
+
 Esta prueba establece una referencia para las siguientes fases del laboratorio, en las que se investigarán otros escenarios de autenticación y los controles de seguridad asociados.
+
+
