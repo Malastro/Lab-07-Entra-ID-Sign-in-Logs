@@ -61,7 +61,7 @@ Así, Antonio podrá dejar de sospechar de todos los vecinos por igual y descubr
 
 ## 3. Fases de implementación
 
-### Paso 1. Preparación de la identidad y validación de una autenticación correcta (T01)
+### T01. Preparación de la identidad y validación de una autenticación correcta (T01)
 
 El primer paso consiste en preparar la identidad de Antonio Recio y comprobar que puede autenticarse correctamente en Microsoft Entra ID. Esta primera prueba servirá como referencia para comparar los siguientes escenarios de autenticación.
 
@@ -146,3 +146,86 @@ La política de Acceso Condicional se ha evaluado correctamente y el requisito d
 La prueba T01 finaliza satisfactoriamente. Antonio Recio consigue autenticarse en Microsoft Entra ID y se generan registros que permiten analizar el acceso desde distintas perspectivas.
 
 Esta primera comprobación establece una referencia de comportamiento normal para las siguientes pruebas del laboratorio, en las que se investigarán errores de autenticación y posibles usos no autorizados de la identidad.
+
+## T02. Investigación de un intento de autenticación fallido
+
+### 2.1. Ejecución de la prueba
+
+Una vez validada la autenticación correcta de Antonio Recio en T01, se realiza una segunda prueba para analizar el comportamiento de Microsoft Entra ID ante unas credenciales incorrectas.
+
+Para ello, se inicia una nueva sesión privada del navegador y se accede a Microsoft My Account utilizando la identidad de Antonio Recio (`arecio`). Durante el proceso se introduce deliberadamente una contraseña incorrecta y se realiza un único intento de autenticación.
+
+Posteriormente, se accede a **Microsoft Entra ID → Monitoring & health → Sign-in logs → User sign-ins (interactive)** para localizar e investigar el evento generado.
+
+### 2.2. Análisis de la información básica (Basic info)
+
+El registro muestra un intento de autenticación fallido con los siguientes datos:
+
+- **Status:** Error.
+- **Sign-in error code:** 50126.
+- **Failure reason:** Error validating credentials due to invalid username or password.
+- **Application:** My Profile.
+- **Resource:** Microsoft Graph.
+- **Client app:** Browser.
+- **Authentication requirement:** Single-factor authentication.
+
+El código **50126 (AADSTS50126)** identifica un error durante la validación de las credenciales, indicando que el nombre de usuario o la contraseña no son válidos.
+
+En esta prueba, al haberse introducido deliberadamente una contraseña incorrecta, se confirma que el fallo se produce durante la autenticación primaria.
+
+![T02 - Basic info overview](screenshots/02-autenticacion-fallida/T02-02a-basic-info-overview.png)
+
+*Figura X. Información general del intento de autenticación fallido.*
+
+![T02 - Basic info error](screenshots/02-autenticacion-fallida/T02-02b-basic-info-error.png)
+
+*Figura X. Código de error 50126 y motivo del fallo de autenticación.*
+
+### 2.3. Análisis de los detalles de autenticación (Authentication Details)
+
+Al revisar los detalles de autenticación, se obtienen los siguientes resultados:
+
+- **Authentication method:** Password.
+- **Authentication method detail:** Password Hash Sync.
+- **Succeeded:** No.
+- **Result detail:** Invalid username or password or Invalid on-premise username or password.
+
+El registro confirma que el intento de validación mediante contraseña no tuvo éxito.
+
+El método **Password Hash Synchronization (PHS)** permite validar las credenciales en Microsoft Entra ID mediante el hash de contraseña sincronizado desde Active Directory local.
+
+En este entorno híbrido, el resultado es coherente con la prueba realizada: se ha introducido una contraseña incorrecta y la autenticación primaria ha sido rechazada.
+
+![T02 - Authentication details](screenshots/02-autenticacion-fallida/T02-03-authentication-details.png)
+
+*Figura X. Detalles del método de autenticación y resultado de la validación de credenciales.*
+
+### 2.4. Revisión de Conditional Access
+
+Al consultar la pestaña **Conditional Access**, el evento muestra el resultado **Not available**.
+
+Por tanto, este registro no proporciona un resultado de evaluación de las políticas de acceso condicional para el intento investigado.
+
+No se puede concluir que la política `CA-Montepinar-MFA` haya bloqueado la autenticación ni atribuirle el fallo observado. La causa identificada corresponde a la validación incorrecta de las credenciales.
+
+![T02 - Conditional Access](screenshots/02-autenticacion-fallida/T02-04-conditional-access.png)
+
+*Figura X. Resultado de Conditional Access para el evento investigado.*
+
+### 2.5. Resultado y conclusiones de la prueba
+
+La investigación permite identificar que el intento de autenticación de Antonio Recio ha fallado durante la validación de las credenciales, generando el código de error **50126**.
+
+El análisis de Authentication Details confirma que el método Password, mediante Password Hash Sync, no ha conseguido validar las credenciales.
+
+Es importante diferenciar este resultado de un fallo de autenticación multifactor (MFA): en esta prueba la autenticación primaria no se ha completado, por lo que no existe evidencia de que se haya llegado a ejecutar un desafío MFA.
+
+**Conclusiones técnicas:**
+
+- Se ha identificado y analizado un intento de autenticación fallido.
+- Se ha interpretado el código de error 50126.
+- Se ha comprobado el resultado de la validación mediante Password Hash Sync.
+- Se ha diferenciado un fallo de contraseña de un posible fallo de MFA.
+- Se ha revisado Conditional Access, documentando que el resultado no estaba disponible para este evento.
+
+Esta prueba establece una referencia para las siguientes fases del laboratorio, en las que se investigarán otros escenarios de autenticación y los controles de seguridad asociados.
