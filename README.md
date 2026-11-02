@@ -109,7 +109,7 @@ Tras localizar los eventos correspondientes a Antonio, se identifican tres regis
 
 Los tres eventos muestran un resultado satisfactorio y corresponden a operaciones realizadas sobre Microsoft Graph.
 
-![SignInLogs](screenshots/01_SignInLogs.png)
+![SignInLogs](screenshots/T01-01-SignInLogs.png)
 
 #### 1.3. Análisis de los detalles de autenticación
 
@@ -125,7 +125,7 @@ En el apartado Authentication Details se obtiene la siguiente información:
 
 El requisito de autenticación multifactor aparece satisfecho mediante una claim incluida en el token. Esto indica que Microsoft Entra ha reconocido una evidencia MFA previamente satisfecha, sin que el registro demuestre que se haya realizado un nuevo desafío MFA durante este evento.
 
-![BasicInfo](screenshots/04_AuthDetails.png)
+![BasicInfo](screenshots/T01-04-AuthDetails.png)
 
 #### 1.4. Comprobación de Acceso Condicional
 
@@ -139,7 +139,7 @@ En el apartado Conditional Access se identifica la siguiente política:
 
 La política de Acceso Condicional se ha evaluado correctamente y el requisito de autenticación multifactor se ha satisfecho, permitiendo continuar con el acceso.
 
-![CA](screenshots/03_CA.png)
+![CA](screenshots/T01-03-CA.png)
 
 #### 1.5. Resultado de la prueba
 
@@ -147,9 +147,9 @@ La prueba T01 finaliza satisfactoriamente. Antonio Recio consigue autenticarse e
 
 Esta primera comprobación establece una referencia de comportamiento normal para las siguientes pruebas del laboratorio, en las que se investigarán errores de autenticación y posibles usos no autorizados de la identidad.
 
-## T02. Investigación de un intento de autenticación fallido
+### T02. Investigación de un intento de autenticación fallido
 
-### 2.1. Ejecución de la prueba
+#### 2.1. Ejecución de la prueba
 
 Una vez validada la autenticación correcta de Antonio Recio en T01, se realiza una segunda prueba para analizar el comportamiento de Microsoft Entra ID ante unas credenciales incorrectas.
 
@@ -157,7 +157,7 @@ Para ello, se inicia una nueva sesión privada del navegador y se accede a Micro
 
 Posteriormente, se accede a **Microsoft Entra ID → Monitoring & health → Sign-in logs → User sign-ins (interactive)** para localizar e investigar el evento generado.
 
-### 2.2. Análisis de la información básica (Basic info)
+#### 2.2. Análisis de la información básica (Basic info)
 
 El registro muestra un intento de autenticación fallido con los siguientes datos:
 
@@ -173,15 +173,12 @@ El código **50126 (AADSTS50126)** identifica un error durante la validación de
 
 En esta prueba, al haberse introducido deliberadamente una contraseña incorrecta, se confirma que el fallo se produce durante la autenticación primaria.
 
-![T02 - Basic info overview](screenshots/02-autenticacion-fallida/T02-02a-basic-info-overview.png)
+![T02 - Basic info overview](screenshots/T02-02-BasicInfo.png)
 
-*Figura X. Información general del intento de autenticación fallido.*
 
-![T02 - Basic info error](screenshots/02-autenticacion-fallida/T02-02b-basic-info-error.png)
+![T02 - Basic info error](screenshots/T02-02.5-BasicInfo2.5.png)
 
-*Figura X. Código de error 50126 y motivo del fallo de autenticación.*
-
-### 2.3. Análisis de los detalles de autenticación (Authentication Details)
+#### 2.3. Análisis de los detalles de autenticación (Authentication Details)
 
 Al revisar los detalles de autenticación, se obtienen los siguientes resultados:
 
@@ -196,11 +193,9 @@ El método **Password Hash Synchronization (PHS)** permite validar las credencia
 
 En este entorno híbrido, el resultado es coherente con la prueba realizada: se ha introducido una contraseña incorrecta y la autenticación primaria ha sido rechazada.
 
-![T02 - Authentication details](screenshots/02-autenticacion-fallida/T02-03-authentication-details.png)
+![T02 - Authentication details](screenshots/T02-03-AuthDetails.png)
 
-*Figura X. Detalles del método de autenticación y resultado de la validación de credenciales.*
-
-### 2.4. Revisión de Conditional Access
+#### 2.4. Revisión de Conditional Access
 
 Al consultar la pestaña **Conditional Access**, el evento muestra el resultado **Not available**.
 
@@ -208,11 +203,9 @@ Por tanto, este registro no proporciona un resultado de evaluación de las polí
 
 No se puede concluir que la política `CA-Montepinar-MFA` haya bloqueado la autenticación ni atribuirle el fallo observado. La causa identificada corresponde a la validación incorrecta de las credenciales.
 
-![T02 - Conditional Access](screenshots/02-autenticacion-fallida/T02-04-conditional-access.png)
+![T02 - Conditional Access](screenshots/T02-04-CA.png)
 
-*Figura X. Resultado de Conditional Access para el evento investigado.*
-
-### 2.5. Resultado y conclusiones de la prueba
+#### 2.5. Resultado y conclusiones de la prueba
 
 La investigación permite identificar que el intento de autenticación de Antonio Recio ha fallado durante la validación de las credenciales, generando el código de error **50126**.
 
