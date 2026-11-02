@@ -375,9 +375,7 @@ A continuación, se abrió una nueva sesión privada del navegador y se repitió
 
 Esta vez, Microsoft Entra ID impidió el acceso y mostró el siguiente mensaje:
 
-> No tiene permiso para acceder a este recurso. Ha iniciado sesión correctamente, pero no tiene permiso para acceder a este recurso.
-
-![T04-02 – Access denied](screenshots/T04-02-AuthDetails.png)
+![T04-02 – Access denied](screenshots/T04-02-AuthDenegada.png)
 
 #### 5.4. Análisis de los registros de inicio de sesión
 
