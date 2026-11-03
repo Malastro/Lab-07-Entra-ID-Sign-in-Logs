@@ -473,13 +473,13 @@ El mensaje de error indicaba que el usuario no había registrado la aplicación 
 
 Por tanto, el detalle de autenticación no coincide con el diagnóstico general del evento.
 
-![Discrepancia entre el error 50203 y Authentication Details](screenshots/T05-03-Discrepancy.png)
+![Registro de auditoría relacionado con Authenticator](screenshots/t04-05-AuthDSP.png)
 
 Para investigar esta diferencia, se consultaron también los Audit Logs. Se encontró una operación de actualización de usuario iniciada por `Azure MFA StrongAuthenticationService`, que incluía cambios en la propiedad `StrongAuthenticationPhoneAppDetail`.
 
 La información registrada mostraba datos de registro de Authenticator y una actualización de su último timestamp de autenticación coincidente temporalmente con el evento investigado.
 
-![Registro de auditoría relacionado con Authenticator](screenshots/t04-05-AuthDSP.png)
+![Discrepancia entre el error 50203 y Authentication Details](screenshots/T05-03-Discrepancy.png)
 
 Esta investigación permite identificar una discrepancia entre el mensaje de diagnóstico y los detalles de autenticación. Por ello, el código `50203` no debe interpretarse aisladamente como prueba de que Authenticator no estaba registrado.
 
