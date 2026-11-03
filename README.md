@@ -435,7 +435,7 @@ Se exportaron dos conjuntos de datos desde Microsoft Entra ID:
 - **Interactive Sign-in Logs:** información general de los eventos de autenticación.
 - **Authentication Details:** métodos de autenticación utilizados y resultados de cada paso.
 
-### 6.2. Análisis general de los eventos
+#### 6.2. Análisis general de los eventos
 
 El conjunto de datos contiene 15 eventos con diferentes resultados:
 
@@ -449,7 +449,7 @@ La mayoría de los eventos corresponden a la aplicación My Profile y todos tien
 
 ![Resumen general de los Sign-in Logs](screenshots/T05-01-Actividad.png)
 
-### 6.3. Correlación de eventos y análisis de MFA
+#### 6.3. Correlación de eventos y análisis de MFA
 
 Para profundizar en los resultados, se correlacionaron los Sign-in Logs con Authentication Details mediante el identificador de solicitud (*Request ID*).
 
@@ -461,7 +461,7 @@ En uno de estos eventos, correspondiente a las 16:46:45 UTC, se realizó un rech
 
 ![Detalles de autenticación de un evento 500121](screenshots/T05-02-AuthError.png)
 
-### 6.4. Investigación de discrepancia en el evento 50203
+#### 6.4. Investigación de discrepancia en el evento 50203
 
 Durante el análisis se identificó un evento especialmente relevante, con código `50203`, registrado el 2 de noviembre a las 14:41:28 UTC.
 
@@ -483,7 +483,7 @@ La información registrada mostraba datos de registro de Authenticator y una act
 
 Esta investigación permite identificar una discrepancia entre el mensaje de diagnóstico y los detalles de autenticación. Por ello, el código `50203` no debe interpretarse aisladamente como prueba de que Authenticator no estaba registrado.
 
-### 6.5. Análisis de Conditional Access
+#### 6.5. Análisis de Conditional Access
 
 El análisis general también permitió identificar el evento `53003`, correspondiente al escenario de bloqueo mediante Conditional Access desarrollado en T04.
 
@@ -522,3 +522,39 @@ La correlación con Authentication Details y la consulta complementaria de Audit
 - Confirmar el efecto de una política de Conditional Access sobre la emisión de tokens.
 
 El laboratorio concluye con la creación de una herramienta Python para facilitar el análisis y la correlación de registros de Microsoft Entra ID.
+
+### 7. Tecnologías y competencias practicadas
+
+#### Tecnologías utilizadas
+
+- **Microsoft Active Directory:** gestión de identidades locales y sincronización con Microsoft Entra ID.
+- **Microsoft Entra ID:** administración de identidades y consulta de registros de inicio de sesión.
+- **Microsoft Entra Connect:** sincronización de identidades entre el entorno local y la nube.
+- **Conditional Access:** configuración y evaluación de políticas de acceso, incluyendo controles MFA y bloqueo de acceso.
+- **Microsoft Authenticator:** análisis de los métodos de autenticación multifactor.
+- **Microsoft Entra Audit Logs:** consulta de registros de auditoría para investigar cambios relacionados con la identidad.
+- **Python:** desarrollo de una herramienta para buscar, filtrar y correlacionar registros de autenticación.
+- **CSV:** exportación, tratamiento y análisis de registros.
+
+#### Competencias desarrolladas
+
+- Análisis e interpretación de Microsoft Entra Sign-in Logs.
+- Investigación de errores de autenticación y códigos de error.
+- Diferenciación entre fallos de contraseña y problemas durante MFA.
+- Correlación de eventos mediante identificadores de solicitud (*Request ID*).
+- Análisis de resultados de políticas de Conditional Access.
+- Investigación de actividad de identidad mediante Audit Logs.
+- Identificación de discrepancias entre mensajes de diagnóstico y detalles de autenticación.
+- Automatización de tareas de investigación mediante Python.
+- Documentación técnica y análisis basado en evidencias.
+
+### 8. Próximas mejoras
+
+El laboratorio establece una base práctica para futuras investigaciones de seguridad de identidades. Algunas posibles ampliaciones son:
+
+- **Detección de comportamientos anómalos:** incorporar criterios para identificar patrones de inicio de sesión potencialmente sospechosos.
+- **Automatización avanzada:** ampliar el script Python con filtros adicionales, estadísticas y generación de informes.
+- **Monitorización centralizada:** integrar los registros de Microsoft Entra ID con Microsoft Sentinel para desarrollar consultas y reglas de detección mediante KQL.
+- **Investigación de incidentes:** ampliar el análisis mediante la correlación de registros de identidad con otras fuentes de telemetría de seguridad.
+
+Estas mejoras quedan planteadas como posibles evoluciones del laboratorio, sin formar parte del alcance de esta versión.
