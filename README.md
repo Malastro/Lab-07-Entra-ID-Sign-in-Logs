@@ -449,8 +449,6 @@ La mayoría de los eventos corresponden a la aplicación My Profile y todos tien
 
 ![Resumen general de los Sign-in Logs](screenshots/T05-01-Actividad.png)
 
-*Figura XX. Resumen de los 15 eventos interactivos analizados en Microsoft Entra ID.*
-
 ### 6.3. Correlación de eventos y análisis de MFA
 
 Para profundizar en los resultados, se correlacionaron los Sign-in Logs con Authentication Details mediante el identificador de solicitud (*Request ID*).
@@ -462,8 +460,6 @@ En los dos eventos con código `500121`, la contraseña se validó correctamente
 En uno de estos eventos, correspondiente a las 16:46:45 UTC, se realizó un rechazo deliberado de la notificación desde el dispositivo móvil. En el segundo evento, de las 17:04:03 UTC, los registros confirman que MFA no se completó, pero no permiten determinar por sí solos el motivo concreto.
 
 ![Detalles de autenticación de un evento 500121](screenshots/T05-02-AuthError.png)
-
-*Figura XX. Validación correcta de la contraseña y fallo durante el segundo factor de autenticación.*
 
 ### 6.4. Investigación de discrepancia en el evento 50203
 
@@ -479,15 +475,11 @@ Por tanto, el detalle de autenticación no coincide con el diagnóstico general 
 
 ![Discrepancia entre el error 50203 y Authentication Details](screenshots/T05-03-Discrepancy.png)
 
-*Figura XX. El mensaje de error 50203 contrasta con los detalles que indican que MFA se completó correctamente.*
-
 Para investigar esta diferencia, se consultaron también los Audit Logs. Se encontró una operación de actualización de usuario iniciada por `Azure MFA StrongAuthenticationService`, que incluía cambios en la propiedad `StrongAuthenticationPhoneAppDetail`.
 
 La información registrada mostraba datos de registro de Authenticator y una actualización de su último timestamp de autenticación coincidente temporalmente con el evento investigado.
 
-![Registro de auditoría relacionado con Authenticator](screenshots/t04-05-AuthDSP)
-
-*Figura XX. Evidencia de Audit Logs relacionada con la información de registro de Authenticator.*
+![Registro de auditoría relacionado con Authenticator](screenshots/t04-05-AuthDSP.png)
 
 Esta investigación permite identificar una discrepancia entre el mensaje de diagnóstico y los detalles de autenticación. Por ello, el código `50203` no debe interpretarse aisladamente como prueba de que Authenticator no estaba registrado.
 
