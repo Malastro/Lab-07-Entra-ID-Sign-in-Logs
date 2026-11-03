@@ -1,4 +1,3 @@
-
 import pandas as pd
 import unicodedata
 import re
@@ -76,7 +75,7 @@ def get_value(row, column):
 
 
 # ============================================================
-# CARGA DE ARCHIVOS
+# CARGA DE ARCHIVOS Y NORMALIZACION
 # ============================================================
 
 def load_data():
@@ -116,7 +115,7 @@ def identify_columns(signins, auth):
             "Código de error", "Sign-in error code", "Error code"
         ]),
         "date": find_column(signins, [
-            "Fecha UTC", "Fecha y hora UTC", "Fecha",
+            "Fecha UTC", "Fecha y hora UTC", "Fecha (UTC)", "Fecha",
             "Date", "Created date time", "CreatedDateTime"
         ]),
         "status": find_column(signins, [
@@ -147,9 +146,6 @@ def identify_columns(signins, auth):
             "Usuario",
             "Nombre de usuario"
         ]),
-        "request": find_column(signins, [
-            "Id. de solicitud", "Request ID", "Request Id"
-        ]),
         "ip": find_column(signins, [
             "Dirección IP", "IP address"
         ]),
@@ -177,8 +173,10 @@ def identify_columns(signins, auth):
         ])
     }
 
-    columns["auth_request"] = find_column(auth, [
-        "Id. de solicitud", "Request ID", "Request Id"
+    # Columnas de Authentication Details
+    columns["auth_date"] = find_column(auth, [
+        "Fecha", "Fecha UTC", "Fecha y hora UTC", "Fecha (UTC)",
+        "Date", "Created date time", "CreatedDateTime"
     ])
 
     columns["auth_method"] = find_column(auth, [
@@ -198,6 +196,21 @@ def identify_columns(signins, auth):
         "Detalle del resultado", "Result detail"
     ])
 
+    # Normalización de marcas temporales a UTC mediante Pandas
+    if columns["date"]:
+        signins["_parsed_datetime"] = pd.to_datetime(
+            signins[columns["date"]], utc=True, errors="coerce"
+        )
+    else:
+        signins["_parsed_datetime"] = pd.NaT
+
+    if columns["auth_date"]:
+        auth["_parsed_datetime"] = pd.to_datetime(
+            auth[columns["auth_date"]], utc=True, errors="coerce"
+        )
+    else:
+        auth["_parsed_datetime"] = pd.NaT
+
     return columns
 
 
@@ -213,23 +226,38 @@ def output(text=""):
     report_lines.append(str(text))
 
 
-def show_authentication_details(row, request_id, auth, columns):
+def show_authentication_details(row, auth, columns, signins):
 
     output("\n  AUTHENTICATION DETAILS")
     output("  " + "-" * 55)
+    output("  Aviso: Asociación basada en marca temporal UTC (sin identificador único).")
 
-    auth_request = columns["auth_request"]
+    event_dt = row.get("_parsed_datetime")
+    raw_date = get_value(row, columns["date"])
 
-    if not request_id or not auth_request:
-        output("  No se puede realizar la correlación.")
+    # Tratamiento de fechas inválidas o no disponibles
+    if pd.isna(event_dt):
+        output(f"  [ERROR] Fecha no válida o no disponible ('{raw_date}'). No se puede asociar.")
         return
 
-    matches = auth[
-        auth[auth_request].astype(str).str.strip() == request_id
-    ]
+    # Control de ambigüedades: detectar colisiones temporales en Sign-in Logs
+    if "_parsed_datetime" in signins.columns:
+        same_dt_count = (signins["_parsed_datetime"] == event_dt).sum()
+        if same_dt_count > 1:
+            output(f"  [ADVERTENCIA] Múltiples eventos de inicio ({same_dt_count}) comparten el timestamp exacto ({event_dt.strftime('%Y-%m-%dT%H:%M:%SZ')}).")
+            output("  Asociación automática bloqueada para evitar datos ambiguos.")
+            return
+
+    # Comprobar que auth cuenta con marcas temporales normalizadas
+    if "_parsed_datetime" not in auth.columns or columns["auth_date"] is None:
+        output("  [ERROR] No se identificó la columna de fecha en Authentication Details.")
+        return
+
+    # Asociación por igualdad exacta de timestamp UTC
+    matches = auth[auth["_parsed_datetime"] == event_dt]
 
     if matches.empty:
-        output("  No se encontraron detalles asociados.")
+        output(f"  No se encontraron detalles asociados para esta marca temporal ({raw_date}).")
         return
 
     for number, (_, auth_row) in enumerate(matches.iterrows(), 1):
@@ -246,7 +274,7 @@ def show_authentication_details(row, request_id, auth, columns):
             output(f"    {label}: {get_value(auth_row, columns[key])}")
 
 
-def show_event(row, index, auth, columns):
+def show_event(row, index, auth, columns, signins):
 
     output("\n" + "=" * 70)
     output(f"EVENTO #{index}")
@@ -274,12 +302,7 @@ def show_event(row, index, auth, columns):
         if value != "No disponible":
             output(f"{label}: {value}")
 
-    # No imprimimos UPN, IP ni identificadores.
-    request_id = get_value(row, columns["request"])
-
-    show_authentication_details(
-        row, request_id, auth, columns
-    )
+    show_authentication_details(row, auth, columns, signins)
 
 
 # ============================================================
@@ -301,24 +324,21 @@ def search_by_error(signins, auth, columns):
     output(f"\nEventos encontrados: {len(results)}")
 
     for number, (_, row) in enumerate(results.iterrows(), 1):
-        show_event(row, number, auth, columns)
+        show_event(row, number, auth, columns, signins)
 
 
 def show_all_events(signins, auth, columns):
 
-    results = signins.copy()
-
-    if columns["date"]:
-        results = results.sort_values(
-            by=columns["date"],
-            ascending=False,
-            na_position="last"
-        )
+    results = results.sort_values(
+    by="_parsed_datetime",
+    ascending=False,
+    na_position="last"
+)
 
     output(f"\nTotal de eventos: {len(results)}")
 
     for number, (_, row) in enumerate(results.iterrows(), 1):
-        show_event(row, number, auth, columns)
+        show_event(row, number, auth, columns, signins)
 
 
 def search_by_user(signins, auth, columns):
@@ -348,7 +368,7 @@ def search_by_user(signins, auth, columns):
     output(f"\nEventos encontrados: {len(results)}")
 
     for number, (_, row) in enumerate(results.iterrows(), 1):
-        show_event(row, number, auth, columns)
+        show_event(row, number, auth, columns, signins)
 
 
 # ============================================================
