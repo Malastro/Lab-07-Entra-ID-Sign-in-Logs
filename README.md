@@ -43,7 +43,7 @@ Guarda los resultados del análisis, incluyendo exportaciones CSV e informes en 
 
 ### `screenshots/` — Las pruebas del delito
 
-Contiene las capturas de pantalla que documentan las distintas fases de implementación y las pruebas realizadas durante la investigación. Las evidencias se organizan en subcarpetas según cada fase del laboratorio y se incrustan directamente en el README para facilitar la comprensión de los procedimientos y resultados obtenidos.
+Contiene las capturas de pantalla que documentan las distintas fases de implementación y las pruebas realizadas durante la investigación. Las evidencias se organizan por fases (T01, T02, T03, T04, T05) se incrustan directamente en el README para facilitar la comprensión de los procedimientos y resultados obtenidos.
 
 ### Flujo de trabajo
 
