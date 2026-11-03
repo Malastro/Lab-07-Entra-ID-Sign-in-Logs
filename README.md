@@ -447,7 +447,7 @@ Los códigos de error identificados fueron `50126`, `500121`, `50140`, `50203` y
 
 La mayoría de los eventos corresponden a la aplicación My Profile y todos tienen Microsoft Graph como recurso. También se observa que los 15 registros utilizan el navegador como aplicación cliente.
 
-![Resumen general de los Sign-in Logs](screenshots/05-patrones-autenticacion/T05-01-signin-summary.png)
+![Resumen general de los Sign-in Logs](screenshots/T05-01-Actividad.png)
 
 *Figura XX. Resumen de los 15 eventos interactivos analizados en Microsoft Entra ID.*
 
@@ -461,7 +461,7 @@ En los dos eventos con código `500121`, la contraseña se validó correctamente
 
 En uno de estos eventos, correspondiente a las 16:46:45 UTC, se realizó un rechazo deliberado de la notificación desde el dispositivo móvil. En el segundo evento, de las 17:04:03 UTC, los registros confirman que MFA no se completó, pero no permiten determinar por sí solos el motivo concreto.
 
-![Detalles de autenticación de un evento 500121](screenshots/05-patrones-autenticacion/T05-02-authentication-errors.png)
+![Detalles de autenticación de un evento 500121](screenshots/T05-02-AuthError.png)
 
 *Figura XX. Validación correcta de la contraseña y fallo durante el segundo factor de autenticación.*
 
@@ -477,7 +477,7 @@ El mensaje de error indicaba que el usuario no había registrado la aplicación 
 
 Por tanto, el detalle de autenticación no coincide con el diagnóstico general del evento.
 
-![Discrepancia entre el error 50203 y Authentication Details](screenshots/05-patrones-autenticacion/T05-03-authenticator-discrepancy.png)
+![Discrepancia entre el error 50203 y Authentication Details](screenshots/T05-03-Discrepancy.png)
 
 *Figura XX. El mensaje de error 50203 contrasta con los detalles que indican que MFA se completó correctamente.*
 
@@ -485,7 +485,7 @@ Para investigar esta diferencia, se consultaron también los Audit Logs. Se enco
 
 La información registrada mostraba datos de registro de Authenticator y una actualización de su último timestamp de autenticación coincidente temporalmente con el evento investigado.
 
-![Registro de auditoría relacionado con Authenticator](screenshots/05-patrones-autenticacion/T05-03b-audit-log-authenticator.png)
+![Registro de auditoría relacionado con Authenticator](screenshots/t04-05-AuthDSP)
 
 *Figura XX. Evidencia de Audit Logs relacionada con la información de registro de Authenticator.*
 
@@ -499,7 +499,7 @@ El evento confirma que la política `CA-Montepinar-Block-Test`, configurada con 
 
 La contraseña había sido validada correctamente, pero el acceso quedó bloqueado por la evaluación de Conditional Access.
 
-![Evaluación de Conditional Access en el evento 53003](screenshots/05-patrones-autenticacion/T05-04-conditional-access.png)
+![Evaluación de Conditional Access en el evento 53003](screenshots/T05-05-CA53003.png)
 
 *Figura XX. Evaluación de las políticas de Conditional Access y bloqueo del acceso mediante CA-Montepinar-Block-Test.*
 
