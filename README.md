@@ -493,21 +493,24 @@ La contraseña había sido validada correctamente, pero el acceso quedó bloquea
 
 ![Evaluación de Conditional Access en el evento 53003](screenshots/T05-05-CA53003.png)
 
-*Figura XX. Evaluación de las políticas de Conditional Access y bloqueo del acceso mediante CA-Montepinar-Block-Test.*
+#### 6.6. Automatización de la investigación mediante Python
 
-### 6.6. Automatización de la investigación mediante Python
+Para facilitar el análisis de los registros exportados, se desarrolló un script en Python que automatiza la búsqueda y correlación de eventos de Microsoft Entra ID.
 
-Para facilitar la consulta de los registros exportados, se desarrolló un script reutilizable en Python que permite:
+La herramienta permite:
 
 - Buscar eventos por código de error.
 - Consultar todos los eventos disponibles.
-- Filtrar los registros por usuario.
-- Correlacionar automáticamente los Sign-in Logs con Authentication Details mediante el Request ID.
-- Mostrar información técnica relevante y guardar los resultados de las consultas en un archivo de texto.
+- Filtrar registros por usuario.
+- Correlacionar automáticamente Sign-in Logs y Authentication Details mediante el Request ID.
+- Mostrar información técnica relevante de cada evento.
+- Guardar los resultados de las consultas en un archivo de texto.
 
-Esta herramienta permite repetir las búsquedas sin tener que revisar manualmente ambos CSV y facilita la identificación de los detalles de autenticación asociados a cada evento.
+El script permite agilizar la investigación sin tener que revisar manualmente los dos archivos CSV y facilita la identificación de los métodos de autenticación y sus resultados.
 
-### 6.7. Conclusiones
+**Código fuente:** [search_signins.py](scripts/search_signins.py)
+
+#### 6.7. Conclusiones
 
 El análisis de los 15 eventos permitió observar que un resultado general de inicio de sesión no siempre refleja por sí solo lo sucedido durante el proceso de autenticación.
 
