@@ -59,7 +59,7 @@ Así, Antonio podrá dejar de sospechar de todos los vecinos por igual y descubr
 
 ## 3. Fases de implementación
 
-### T01. Preparación de la identidad y validación de una autenticación correcta (T01)
+### T01. Preparación de la identidad y validación de una autenticación correcta
 
 El primer paso consiste en preparar la identidad de Antonio Recio y comprobar que puede autenticarse correctamente en Microsoft Entra ID. Esta primera prueba servirá como referencia para comparar los siguientes escenarios de autenticación.
 
@@ -123,7 +123,7 @@ En el apartado Authentication Details se obtiene la siguiente información:
 
 El requisito de autenticación multifactor aparece satisfecho mediante una claim incluida en el token. Esto indica que Microsoft Entra ha reconocido una evidencia MFA previamente satisfecha, sin que el registro demuestre que se haya realizado un nuevo desafío MFA durante este evento.
 
-![BasicInfo](screenshots/T01-04-AuthDetails.png)
+![Authentication Details](screenshots/T01-04-AuthDetails.png)
 
 #### 1.4. Comprobación de Acceso Condicional
 
@@ -219,9 +219,9 @@ Es importante diferenciar este resultado de un fallo de autenticación multifact
 - Se ha diferenciado un fallo de contraseña de un posible fallo de MFA.
 - Se ha revisado Conditional Access, documentando que el resultado no estaba disponible para este evento.
 
-### 4. T03 — Fallo de autenticación multifactor (MFA)
+### T03. Fallo de autenticación multifactor (MFA)
 
-#### 4.1. Objetivo de la prueba
+#### 3.1. Objetivo de la prueba
 
 En esta prueba se analiza un escenario en el que un usuario introduce correctamente sus credenciales, pero no completa el segundo factor de autenticación solicitado por Microsoft Entra ID.
 
@@ -229,7 +229,7 @@ El objetivo es identificar cómo se registra este comportamiento en los Sign-in 
 
 En esta ocasión, Antonio Recio consigue validar su contraseña, pero rechaza la solicitud de comprobación recibida en Microsoft Authenticator.
 
-#### 4.2. Ejecución de la prueba
+#### 3.2. Ejecución de la prueba
 
 Se utilizó una ventana privada del navegador para iniciar una nueva sesión con la cuenta de Antonio Recio.
 
@@ -241,7 +241,7 @@ El navegador mostró el mensaje de acceso denegado.
 
 ![Pantalla de solicitud de autenticación denegada](screenshots/T03-01-AuthDenegada.png)
 
-#### 4.3. Basic info — Información general del evento
+#### 3.3. Basic info — Información general del evento
 
 Una vez localizado el evento en Microsoft Entra ID → Monitoring & health → Sign-in logs → User sign-ins (interactive), se analizaron sus datos generales.
 
@@ -262,7 +262,7 @@ También se revisaron la aplicación, la aplicación cliente y el recurso asocia
 
 ![Basic info - Aplicación, cliente y recurso](screenshots/T03-02.5BasicInfo2.5.png)
 
-#### 4.4. Authentication Details — Detalles de autenticación
+#### 3.4. Authentication Details — Detalles de autenticación
 
 El análisis de Authentication Details permitió diferenciar el resultado de la autenticación primaria del resultado de la verificación multifactor.
 
@@ -283,7 +283,7 @@ Es importante distinguir ambos resultados: el usuario no tuvo un problema de con
 
 ![Authentication Details - Contraseña correcta y MFA incompleto](screenshots/T03-03-AuthDetails.png)
 
-#### 4.5. Conditional Access — Acceso Condicional
+#### 3.5. Conditional Access — Acceso Condicional
 
 Se revisó la política `CA-Montepinar-MFA`, responsable de exigir autenticación multifactor para el acceso.
 
@@ -301,7 +301,7 @@ No debe interpretarse este resultado, por sí solo, como un error de configuraci
 
 ![Conditional Access - CA-Montepinar-MFA](screenshots/T03-04-CA.png)
 
-#### 4.6. Resultado y conclusiones
+#### 3.6. Resultado y conclusiones
 
 La investigación permitió identificar un escenario en el que la autenticación primaria se completa correctamente, pero el acceso no llega a concederse porque el proceso MFA queda incompleto.
 
@@ -330,9 +330,9 @@ La comparación demuestra la importancia de analizar los detalles de autenticaci
 
 Esta prueba establece una referencia para las siguientes fases del laboratorio, en las que se investigarán otros escenarios de autenticación y los controles de seguridad asociados.
 
-### 5. T04 – Conditional Access Block Test
+### T04. Conditional Access Block Test
 
-#### 5.1. Objetivo de la prueba
+#### 4.1. Objetivo de la prueba
 
 El objetivo de esta prueba es comprobar cómo una política de **Conditional Access** puede impedir el acceso a una aplicación incluso cuando el usuario introduce correctamente sus credenciales.
 
@@ -346,7 +346,7 @@ La política se configuró con los siguientes parámetros:
 - **Grant:** Block access.
 - **Initial state:** Report-only.
 
-#### 5.2. Evaluación en modo Report-only
+#### 4.2. Evaluación en modo Report-only
 
 Con la política configurada en modo `Report-only`, se inició sesión con Antonio utilizando la contraseña correcta y completando el proceso de autenticación multifactor.
 
@@ -363,7 +363,7 @@ En el registro se identificaron dos políticas:
 
 Esto demuestra que el modo Report-only permite evaluar el impacto de una política sin aplicar realmente el bloqueo al usuario.
 
-### 5.3. Activación de la política y bloqueo del acceso
+#### 4.3. Activación de la política y bloqueo del acceso
 
 Una vez comprobado el resultado de la simulación, se cambió el estado de `CA-Montepinar-Block-Test` a `Enabled`.
 
@@ -373,7 +373,7 @@ Esta vez, Microsoft Entra ID impidió el acceso y mostró el siguiente mensaje:
 
 ![T04-02 – Access denied](screenshots/T04-02-AuthDenegada.png)
 
-#### 5.4. Análisis de los registros de inicio de sesión
+#### 4.4. Análisis de los registros de inicio de sesión
 
 Tras localizar el evento correspondiente en **Sign-in logs**, se identificaron los siguientes datos:
 
@@ -405,7 +405,7 @@ Los resultados mostraron:
 
 La política `CA-Montepinar-Block-Test` aplicó el control de bloqueo configurado. El código `53003` y el motivo del fallo confirman que Conditional Access impidió el acceso.
 
-#### 5.5. Conclusiones
+#### 4.5. Conclusiones
 
 Esta prueba permitió comprobar la diferencia entre los modos **Report-only** y **Enabled** de Conditional Access:
 
@@ -418,9 +418,9 @@ Finalmente, la política `CA-Montepinar-Block-Test` se devolvió al estado `Repo
 
 La prueba demuestra la importancia de evaluar las políticas mediante Report-only antes de habilitarlas en un entorno real, reduciendo el riesgo de bloquear accesos legítimos.
 
-### 6. T05 – Authentication Patterns Investigation
+### T05. Authentication Patterns Investigation
 
-#### 6.1. Objetivo
+#### 5.1. Objetivo
 
 Tras analizar distintos escenarios de autenticación en las fases anteriores, el siguiente paso consiste en revisar un conjunto más amplio de eventos para identificar patrones de comportamiento y relacionar los resultados generales de los inicios de sesión con los detalles de autenticación.
 
@@ -431,7 +431,7 @@ Se exportaron dos conjuntos de datos desde Microsoft Entra ID:
 - **Interactive Sign-in Logs:** información general de los eventos de autenticación.
 - **Authentication Details:** métodos de autenticación utilizados y resultados de cada paso.
 
-#### 6.2. Análisis general de los eventos
+#### 5.2. Análisis general de los eventos
 
 El conjunto de datos contiene 15 eventos con diferentes resultados:
 
@@ -445,7 +445,7 @@ La mayoría de los eventos corresponden a la aplicación My Profile y todos tien
 
 ![Resumen general de los Sign-in Logs](screenshots/T05-01-Actividad.png)
 
-#### 6.3. Correlación de eventos y análisis de MFA
+#### 5.3. Correlación de eventos y análisis de MFA
 
 Para profundizar en los resultados, se correlacionaron los Sign-in Logs con Authentication Details mediante el identificador de solicitud (*Request ID*).
 
@@ -457,7 +457,7 @@ En uno de estos eventos, correspondiente a las 16:46:45 UTC, se realizó un rech
 
 ![Detalles de autenticación de un evento 500121](screenshots/T05-02-AuthError.png)
 
-#### 6.4. Investigación de discrepancia en el evento 50203
+#### 5.4. Investigación de discrepancia en el evento 50203
 
 Durante el análisis se identificó un evento especialmente relevante, con código `50203`, registrado el 2 de noviembre a las 14:41:28 UTC.
 
@@ -479,7 +479,7 @@ La información registrada mostraba datos de registro de Authenticator y una act
 
 Esta investigación permite identificar una discrepancia entre el mensaje de diagnóstico y los detalles de autenticación. Por ello, el código `50203` no debe interpretarse aisladamente como prueba de que Authenticator no estaba registrado.
 
-#### 6.5. Análisis de Conditional Access
+#### 5.5. Análisis de Conditional Access
 
 El análisis general también permitió identificar el evento `53003`, correspondiente al escenario de bloqueo mediante Conditional Access desarrollado en T04.
 
@@ -489,7 +489,7 @@ La contraseña había sido validada correctamente, pero el acceso quedó bloquea
 
 ![Evaluación de Conditional Access en el evento 53003](screenshots/T05-05-CA53003.png)
 
-#### 6.6. Automatización de la investigación mediante Python
+#### 5.6. Automatización de la investigación mediante Python
 
 Para facilitar el análisis de los registros exportados, se desarrolló un script en Python que automatiza la búsqueda y correlación de eventos de Microsoft Entra ID.
 
@@ -504,9 +504,23 @@ La herramienta permite:
 
 El script permite agilizar la investigación sin tener que revisar manualmente los dos archivos CSV y facilita la identificación de los métodos de autenticación y sus resultados.
 
+##### Requisitos y ejecución del script
+
+Para utilizar la herramienta de investigación, es necesario contar con Python 3 y la biblioteca **Pandas**:
+
+```bash
+pip install pandas
+```
+
+Una vez instalada la dependencia, el script se ejecuta desde el directorio raíz del laboratorio mediante:
+
+```bash
+python scripts/search_signins.py
+```
+
 **Código fuente:** [search_signins.py](scripts/search_signins.py)
 
-#### 6.7. Conclusiones
+#### 5.7. Conclusiones
 
 El análisis de los 15 eventos permitió observar que un resultado general de inicio de sesión no siempre refleja por sí solo lo sucedido durante el proceso de autenticación.
 
@@ -519,9 +533,9 @@ La correlación con Authentication Details y la consulta complementaria de Audit
 
 El laboratorio concluye con la creación de una herramienta Python para facilitar el análisis y la correlación de registros de Microsoft Entra ID.
 
-### 7. Tecnologías y competencias practicadas
+## 4. Tecnologías y competencias practicadas
 
-#### Tecnologías utilizadas
+### Tecnologías utilizadas
 
 - **Microsoft Active Directory:** gestión de identidades locales y sincronización con Microsoft Entra ID.
 - **Microsoft Entra ID:** administración de identidades y consulta de registros de inicio de sesión.
@@ -532,7 +546,7 @@ El laboratorio concluye con la creación de una herramienta Python para facilita
 - **Python:** desarrollo de una herramienta para buscar, filtrar y correlacionar registros de autenticación.
 - **CSV:** exportación, tratamiento y análisis de registros.
 
-#### Competencias desarrolladas
+### Competencias desarrolladas
 
 - Análisis e interpretación de Microsoft Entra Sign-in Logs.
 - Investigación de errores de autenticación y códigos de error.
@@ -544,7 +558,7 @@ El laboratorio concluye con la creación de una herramienta Python para facilita
 - Automatización de tareas de investigación mediante Python.
 - Documentación técnica y análisis basado en evidencias.
 
-### 8. Próximas mejoras
+## 5. Próximas mejoras
 
 El laboratorio establece una base práctica para futuras investigaciones de seguridad de identidades. Algunas posibles ampliaciones son:
 
