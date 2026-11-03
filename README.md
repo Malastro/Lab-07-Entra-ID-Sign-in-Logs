@@ -8,7 +8,7 @@ Tras extraviar su cartera en Mirador de Montepinar, Antonio Recio convoca una ju
 
 Trasladando esta situación al entorno digital de Mirador de Montepinar S.L., la tarjeta de crédito representa las credenciales de una identidad corporativa. Antonio ha perdido el control de su cuenta y comienzan a producirse distintos intentos de acceso que requieren una investigación.
 
-Nuestra misión será descubrir qué ha sucedido utilizando los registros de inicio de sesión (*Sign-in Logs*) de Microsoft Entra ID. A través de Microsoft Graph PowerShell y herramientas de análisis, investigaremos las autenticaciones, identificaremos comportamientos anómalos y recopilaremos evidencias para reconstruir el incidente.
+Nuestra misión será descubrir qué ha sucedido utilizando los registros de inicio de sesión (*Sign-in Logs*) de Microsoft Entra ID. A través de herramientas de análisis y automatización en Python, investigaremos las autenticaciones, identificaremos comportamientos anómalos y recopilaremos evidencias para reconstruir el incidente.
 
 Al igual que Javi insiste en no acusar a ningún vecino sin pruebas, nuestro objetivo será diferenciar los hechos registrados de las simples sospechas y elaborar un diagnóstico fundamentado en evidencias técnicas.
 
@@ -20,14 +20,14 @@ Al igual que Javi insiste en no acusar a ningún vecino sin pruebas, nuestro obj
 - Examinar los detalles de los intentos de inicio de sesión para formular y comprobar hipótesis.
 - Correlacionar las evidencias disponibles con la identidad, la aplicación, el dispositivo y el contexto del acceso.
 - Identificar patrones de autenticación fallida y posibles comportamientos sospechosos.
-- Recuperar y exportar registros mediante Microsoft Graph PowerShell.
-- Automatizar el filtrado y análisis de eventos utilizando PowerShell.
+- Exportar y estructurar registros de inicio de sesión (*Sign-in Logs*) y detalles de autenticación (*Authentication Details*).
+- Automatizar la ingesta, filtrado y correlación relacional de eventos utilizando Python y Pandas.
 - Documentar el incidente, las evidencias recopiladas y las posibles acciones correctivas.
 - Comprender las limitaciones de los registros disponibles según los permisos, las licencias y la configuración del tenant.
 
 ## 2. Estructura del proyecto
 
-Antonio Recio quiere saber quién está utilizando su tarjeta y qué ha ocurrido realmente en Mirador de Montepinar. Para investigar el incidente, el laboratorio se organiza en cinco bloques: datos, scripts, consultas, informes y evidencias.
+Antonio Recio quiere saber quién está utilizando su tarjeta y qué ha ocurrido realmente en Mirador de Montepinar. Para investigar el incidente, el laboratorio se organiza en cuatro bloques: datos, scripts, informes y evidencias.
 
 ### `data/` — Los registros de Montepinar
 
@@ -35,11 +35,7 @@ Almacena muestras anonimizadas de los registros de inicio de sesión (*Sign-in L
 
 ### `scripts/` — La investigación de Antonio Recio
 
-Contiene los scripts PowerShell utilizados para conectarse a Microsoft Graph, recuperar los registros de autenticación, filtrar eventos y automatizar su análisis.
-
-### `queries/` — El interrogatorio de Montepinar
-
-Incluye las consultas KQL utilizadas para investigar patrones de autenticación en Azure Log Analytics, como intentos fallidos, resultados de MFA y actividad sospechosa.
+Contiene la herramienta de análisis en Python (`search_signins.py`) desarrollada para cargar, filtrar por código de error o usuario, y correlacionar automáticamente eventos y pasos de autenticación mediante el `Request ID`.
 
 ### `reports/` — Los informes de la junta
 
@@ -52,8 +48,8 @@ Contiene las capturas de pantalla que documentan las distintas fases de implemen
 ### Flujo de trabajo
 
 1. Se generan distintos eventos de autenticación en Microsoft Entra ID.
-2. Se consultan los Sign-in Logs y se recuperan los registros mediante Microsoft Graph PowerShell.
-3. Se procesan los eventos mediante scripts PowerShell y, opcionalmente, consultas KQL.
+2. Se consultan y exportan los registros de *Sign-in Logs* e *Interactive Authentication Details*.
+3. Se procesan y correlacionan los eventos mediante el script de Python (`search_signins.py`).
 4. Se documentan los hallazgos y se generan los informes correspondientes.
 5. Se recopilan las evidencias para reconstruir el incidente y proponer medidas correctivas.
 
@@ -473,7 +469,7 @@ El mensaje de error indicaba que el usuario no había registrado la aplicación 
 
 Por tanto, el detalle de autenticación no coincide con el diagnóstico general del evento.
 
-![Registro de auditoría relacionado con Authenticator](screenshots/t04-05-AuthDSP.png)
+![Registro de auditoría relacionado con Authenticator](screenshots/t05-04-AuthDSP.png)
 
 Para investigar esta diferencia, se consultaron también los Audit Logs. Se encontró una operación de actualización de usuario iniciada por `Azure MFA StrongAuthenticationService`, que incluía cambios en la propiedad `StrongAuthenticationPhoneAppDetail`.
 
@@ -554,7 +550,7 @@ El laboratorio establece una base práctica para futuras investigaciones de segu
 
 - **Detección de comportamientos anómalos:** incorporar criterios para identificar patrones de inicio de sesión potencialmente sospechosos.
 - **Automatización avanzada:** ampliar el script Python con filtros adicionales, estadísticas y generación de informes.
-- **Monitorización centralizada:** integrar los registros de Microsoft Entra ID con Microsoft Sentinel para desarrollar consultas y reglas de detección mediante KQL.
+- **Monitorización centralizada:** evaluar la integración de los registros de Microsoft Entra ID con herramientas SIEM / Microsoft Sentinel para reglas de detección y correlación centralizada.
 - **Investigación de incidentes:** ampliar el análisis mediante la correlación de registros de identidad con otras fuentes de telemetría de seguridad.
 
 Estas mejoras quedan planteadas como posibles evoluciones del laboratorio, sin formar parte del alcance de esta versión.
