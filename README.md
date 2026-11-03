@@ -422,3 +422,108 @@ Finalmente, la política `CA-Montepinar-Block-Test` se devolvió al estado `Repo
 
 La prueba demuestra la importancia de evaluar las políticas mediante Report-only antes de habilitarlas en un entorno real, reduciendo el riesgo de bloquear accesos legítimos.
 
+### 6. T05 – Authentication Patterns Investigation
+
+#### 6.1. Objetivo
+
+Tras analizar distintos escenarios de autenticación en las fases anteriores, el siguiente paso consiste en revisar un conjunto más amplio de eventos para identificar patrones de comportamiento y relacionar los resultados generales de los inicios de sesión con los detalles de autenticación.
+
+Para ello, se analizaron los **15 registros interactivos de inicio de sesión de Antonio Recio**, correspondientes al periodo del 1 al 2 de noviembre de 2026.
+
+Se exportaron dos conjuntos de datos desde Microsoft Entra ID:
+
+- **Interactive Sign-in Logs:** información general de los eventos de autenticación.
+- **Authentication Details:** métodos de autenticación utilizados y resultados de cada paso.
+
+### 6.2. Análisis general de los eventos
+
+El conjunto de datos contiene 15 eventos con diferentes resultados:
+
+- 7 autenticaciones correctas.
+- 5 autenticaciones fallidas.
+- 3 autenticaciones interrumpidas.
+
+Los códigos de error identificados fueron `50126`, `500121`, `50140`, `50203` y `53003`.
+
+La mayoría de los eventos corresponden a la aplicación My Profile y todos tienen Microsoft Graph como recurso. También se observa que los 15 registros utilizan el navegador como aplicación cliente.
+
+![Resumen general de los Sign-in Logs](screenshots/05-patrones-autenticacion/T05-01-signin-summary.png)
+
+*Figura XX. Resumen de los 15 eventos interactivos analizados en Microsoft Entra ID.*
+
+### 6.3. Correlación de eventos y análisis de MFA
+
+Para profundizar en los resultados, se correlacionaron los Sign-in Logs con Authentication Details mediante el identificador de solicitud (*Request ID*).
+
+Esta correlación permitió distinguir los fallos de autenticación primaria de aquellos producidos durante el segundo factor.
+
+En los dos eventos con código `500121`, la contraseña se validó correctamente mediante Password Hash Sync, pero la notificación de Microsoft Authenticator no llegó a completarse.
+
+En uno de estos eventos, correspondiente a las 16:46:45 UTC, se realizó un rechazo deliberado de la notificación desde el dispositivo móvil. En el segundo evento, de las 17:04:03 UTC, los registros confirman que MFA no se completó, pero no permiten determinar por sí solos el motivo concreto.
+
+![Detalles de autenticación de un evento 500121](screenshots/05-patrones-autenticacion/T05-02-authentication-errors.png)
+
+*Figura XX. Validación correcta de la contraseña y fallo durante el segundo factor de autenticación.*
+
+### 6.4. Investigación de discrepancia en el evento 50203
+
+Durante el análisis se identificó un evento especialmente relevante, con código `50203`, registrado el 2 de noviembre a las 14:41:28 UTC.
+
+El mensaje de error indicaba que el usuario no había registrado la aplicación Authenticator. Sin embargo, al consultar Authentication Details, se encontraron resultados aparentemente contradictorios:
+
+- Password: autenticación correcta.
+- Mobile app notification: autenticación satisfactoria.
+- Resultado: `MFA completed in Azure AD`.
+
+Por tanto, el detalle de autenticación no coincide con el diagnóstico general del evento.
+
+![Discrepancia entre el error 50203 y Authentication Details](screenshots/05-patrones-autenticacion/T05-03-authenticator-discrepancy.png)
+
+*Figura XX. El mensaje de error 50203 contrasta con los detalles que indican que MFA se completó correctamente.*
+
+Para investigar esta diferencia, se consultaron también los Audit Logs. Se encontró una operación de actualización de usuario iniciada por `Azure MFA StrongAuthenticationService`, que incluía cambios en la propiedad `StrongAuthenticationPhoneAppDetail`.
+
+La información registrada mostraba datos de registro de Authenticator y una actualización de su último timestamp de autenticación coincidente temporalmente con el evento investigado.
+
+![Registro de auditoría relacionado con Authenticator](screenshots/05-patrones-autenticacion/T05-03b-audit-log-authenticator.png)
+
+*Figura XX. Evidencia de Audit Logs relacionada con la información de registro de Authenticator.*
+
+Esta investigación permite identificar una discrepancia entre el mensaje de diagnóstico y los detalles de autenticación. Por ello, el código `50203` no debe interpretarse aisladamente como prueba de que Authenticator no estaba registrado.
+
+### 6.5. Análisis de Conditional Access
+
+El análisis general también permitió identificar el evento `53003`, correspondiente al escenario de bloqueo mediante Conditional Access desarrollado en T04.
+
+El evento confirma que la política `CA-Montepinar-Block-Test`, configurada con el control **Block access**, impidió la emisión del token.
+
+La contraseña había sido validada correctamente, pero el acceso quedó bloqueado por la evaluación de Conditional Access.
+
+![Evaluación de Conditional Access en el evento 53003](screenshots/05-patrones-autenticacion/T05-04-conditional-access.png)
+
+*Figura XX. Evaluación de las políticas de Conditional Access y bloqueo del acceso mediante CA-Montepinar-Block-Test.*
+
+### 6.6. Automatización de la investigación mediante Python
+
+Para facilitar la consulta de los registros exportados, se desarrolló un script reutilizable en Python que permite:
+
+- Buscar eventos por código de error.
+- Consultar todos los eventos disponibles.
+- Filtrar los registros por usuario.
+- Correlacionar automáticamente los Sign-in Logs con Authentication Details mediante el Request ID.
+- Mostrar información técnica relevante y guardar los resultados de las consultas en un archivo de texto.
+
+Esta herramienta permite repetir las búsquedas sin tener que revisar manualmente ambos CSV y facilita la identificación de los detalles de autenticación asociados a cada evento.
+
+### 6.7. Conclusiones
+
+El análisis de los 15 eventos permitió observar que un resultado general de inicio de sesión no siempre refleja por sí solo lo sucedido durante el proceso de autenticación.
+
+La correlación con Authentication Details y la consulta complementaria de Audit Logs permitieron:
+
+- Diferenciar errores de contraseña de fallos durante MFA.
+- Identificar interrupciones de sesión que no representan necesariamente fallos de autenticación.
+- Investigar discrepancias entre los mensajes de diagnóstico y los detalles de autenticación.
+- Confirmar el efecto de una política de Conditional Access sobre la emisión de tokens.
+
+El laboratorio concluye con la creación de una herramienta Python para facilitar el análisis y la correlación de registros de Microsoft Entra ID.
