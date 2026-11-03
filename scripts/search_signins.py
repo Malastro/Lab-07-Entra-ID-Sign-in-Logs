@@ -8,11 +8,28 @@ from pathlib import Path
 # CONFIGURACION
 # ============================================================
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).resolve().parent
+REPO_DIR = BASE_DIR.parent
+DATA_DIR = REPO_DIR / "data"
+REPORTS_DIR = REPO_DIR / "reports"
 
-SIGNINS_FILE = BASE_DIR / "InteractiveSignIns_2026-11-01_2026-11-02.csv"
-AUTH_FILE = BASE_DIR / "InteractiveSignIns_AuthDetails_2026-11-01_2026-11-02.csv"
-REPORT_FILE = BASE_DIR / "T05_search_results.txt"
+def resolve_file(filename):
+    # Busca primero en data/, luego en scripts/, y luego en el directorio actual
+    for candidate in [DATA_DIR / filename, BASE_DIR / filename, Path.cwd() / "data" / filename, Path.cwd() / filename]:
+        if candidate.exists():
+            return candidate
+    return DATA_DIR / filename
+
+SIGNINS_FILE = resolve_file("InteractiveSignIns_2026-11-01_2026-11-02.csv")
+AUTH_FILE = resolve_file("InteractiveSignIns_AuthDetails_2026-11-01_2026-11-02.csv")
+
+if not REPORTS_DIR.exists():
+    try:
+        REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+
+REPORT_FILE = (REPORTS_DIR if REPORTS_DIR.exists() else BASE_DIR) / "T05_search_results.txt"
 
 
 # ============================================================
@@ -118,6 +135,7 @@ def identify_columns(signins, auth):
             "Requisito de autenticación", "Authentication requirement"
         ]),
         "ca_status": find_column(signins, [
+            "Acceso condicional",
             "Estado de Acceso Condicional",
             "Conditional Access status",
             "Resultado de Acceso Condicional"
@@ -126,7 +144,8 @@ def identify_columns(signins, auth):
             "Nombre principal de usuario",
             "User principal name",
             "UPN",
-            "Usuario"
+            "Usuario",
+            "Nombre de usuario"
         ]),
         "request": find_column(signins, [
             "Id. de solicitud", "Request ID", "Request Id"
@@ -141,16 +160,16 @@ def identify_columns(signins, auth):
             "Aplicación cliente", "Client app"
         ]),
         "browser": find_column(signins, [
-            "Navegador", "Browser"
+            "Navegador", "Browser", "Explorador"
         ]),
         "os": find_column(signins, [
             "Sistema operativo", "Operating system"
         ]),
         "managed": find_column(signins, [
-            "Dispositivo administrado", "Managed"
+            "Dispositivo administrado", "Managed", "Administrada"
         ]),
         "compliant": find_column(signins, [
-            "Dispositivo compatible", "Compliant"
+            "Dispositivo compatible", "Compliant", "Conforme"
         ]),
         "ca_policies": find_column(signins, [
             "Políticas de acceso condicional",
@@ -315,11 +334,16 @@ def search_by_user(signins, auth, columns):
 
     user = input("\nIntroduce el UPN o nombre de usuario: ").strip()
 
-    results = signins[
-        signins[user_col].astype(str).str.contains(
-            user, case=False, na=False, regex=False
-        )
-    ]
+    mask = signins[user_col].astype(str).str.contains(
+        user, case=False, na=False, regex=False
+    )
+    for alt_col in ["Usuario", "Nombre de usuario", "Nombre principal de usuario"]:
+        if alt_col in signins.columns and alt_col != user_col:
+            mask = mask | signins[alt_col].astype(str).str.contains(
+                user, case=False, na=False, regex=False
+            )
+
+    results = signins[mask]
 
     output(f"\nEventos encontrados: {len(results)}")
 
