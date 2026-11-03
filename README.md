@@ -21,7 +21,7 @@ Al igual que Javi insiste en no acusar a ningún vecino sin pruebas, nuestro obj
 - Correlacionar las evidencias disponibles con la identidad, la aplicación, el dispositivo y el contexto del acceso.
 - Identificar patrones de autenticación fallida y posibles comportamientos sospechosos.
 - Exportar y estructurar registros de inicio de sesión (*Sign-in Logs*) y detalles de autenticación (*Authentication Details*).
-- Automatizar la ingesta, filtrado y correlación relacional de eventos utilizando Python y Pandas.
+- Automatizar la ingesta, filtrado y análisis de eventos utilizando Python y Pandas.
 - Documentar el incidente, las evidencias recopiladas y las posibles acciones correctivas.
 - Comprender las limitaciones de los registros disponibles según los permisos, las licencias y la configuración del tenant.
 
@@ -35,21 +35,21 @@ Almacena muestras anonimizadas de los registros de inicio de sesión (*Sign-in L
 
 ### `scripts/` — La investigación de Antonio Recio
 
-Contiene la herramienta de análisis en Python (`search_signins.py`) desarrollada para cargar, filtrar por código de error o usuario, y correlacionar automáticamente eventos y pasos de autenticación mediante el `Request ID`.
+Contiene la herramienta de análisis en Python (`search_signins.py`) desarrollada para cargar y filtrar eventos de autenticación por código de error o por usuario.
 
 ### `reports/` — Los informes de la junta
 
-Guarda los resultados del análisis, incluyendo exportaciones CSV e informes en Markdown con los errores detectados, los eventos relevantes y las conclusiones de la investigación.
+Almacena los resultados generados localmente durante el análisis, como el informe de texto `reports/T05_search_results.txt` producido al ejecutar el script de investigación. Esta carpeta se utiliza para salidas locales y los archivos de texto (`*.txt`) están excluidos del repositorio mediante `.gitignore`.
 
 ### `screenshots/` — Las pruebas del delito
 
-Contiene las capturas de pantalla que documentan las distintas fases de implementación y las pruebas realizadas durante la investigación. Las evidencias se organizan por fases (T01, T02, T03, T04, T05) se incrustan directamente en el README para facilitar la comprensión de los procedimientos y resultados obtenidos.
+Contiene las capturas de pantalla que documentan las distintas fases de implementación y las pruebas realizadas durante la investigación. Las evidencias se almacenan directamente en esta carpeta y se incrustan en el README para facilitar la comprensión de los procedimientos y resultados obtenidos.
 
 ### Flujo de trabajo
 
 1. Se generan distintos eventos de autenticación en Microsoft Entra ID.
 2. Se consultan y exportan los registros de *Sign-in Logs* e *Interactive Authentication Details*.
-3. Se procesan y correlacionan los eventos mediante el script de Python (`search_signins.py`).
+3. Se procesan y analizan los eventos mediante el script de Python (`search_signins.py`).
 4. Se documentan los hallazgos y se generan los informes correspondientes.
 5. Se recopilan las evidencias para reconstruir el incidente y proponer medidas correctivas.
 
@@ -445,11 +445,11 @@ La mayoría de los eventos corresponden a la aplicación My Profile y todos tien
 
 ![Resumen general de los Sign-in Logs](screenshots/T05-01-Actividad.png)
 
-#### 5.3. Correlación de eventos y análisis de MFA
+#### 5.3. 5.3. Análisis conjunto de Sign-in Logs y Authentication Details
 
-Para profundizar en los resultados, se correlacionaron los Sign-in Logs con Authentication Details mediante el identificador de solicitud (*Request ID*).
+Para profundizar en los resultados, se analizaron conjuntamente los Sign-in Logs y Authentication Details.
 
-Esta correlación permitió distinguir los fallos de autenticación primaria de aquellos producidos durante el segundo factor.
+Este análisis conjunto permitió distinguir los fallos de autenticación primaria de aquellos producidos durante el segundo factor.
 
 En los dos eventos con código `500121`, la contraseña se validó correctamente mediante Password Hash Sync, pero la notificación de Microsoft Authenticator no llegó a completarse.
 
@@ -491,18 +491,17 @@ La contraseña había sido validada correctamente, pero el acceso quedó bloquea
 
 #### 5.6. Automatización de la investigación mediante Python
 
-Para facilitar el análisis de los registros exportados, se desarrolló un script en Python que automatiza la búsqueda y correlación de eventos de Microsoft Entra ID.
+Para facilitar el análisis de los registros exportados, se desarrolló un script en Python que automatiza la búsqueda y consulta de eventos de Microsoft Entra ID.
 
 La herramienta permite:
 
 - Buscar eventos por código de error.
 - Consultar todos los eventos disponibles.
 - Filtrar registros por usuario.
-- Correlacionar automáticamente Sign-in Logs y Authentication Details mediante el Request ID.
 - Mostrar información técnica relevante de cada evento.
 - Guardar los resultados de las consultas en un archivo de texto.
 
-El script permite agilizar la investigación sin tener que revisar manualmente los dos archivos CSV y facilita la identificación de los métodos de autenticación y sus resultados.
+El script permite agilizar la investigación sin tener que revisar manualmente los archivos CSV y facilita la consulta organizada de los eventos y sus resultados.
 
 ##### Requisitos y ejecución del script
 
@@ -524,14 +523,14 @@ python scripts/search_signins.py
 
 El análisis de los 15 eventos permitió observar que un resultado general de inicio de sesión no siempre refleja por sí solo lo sucedido durante el proceso de autenticación.
 
-La correlación con Authentication Details y la consulta complementaria de Audit Logs permitieron:
+El análisis conjunto con Authentication Details y la consulta complementaria de Audit Logs permitieron:
 
 - Diferenciar errores de contraseña de fallos durante MFA.
 - Identificar interrupciones de sesión que no representan necesariamente fallos de autenticación.
 - Investigar discrepancias entre los mensajes de diagnóstico y los detalles de autenticación.
 - Confirmar el efecto de una política de Conditional Access sobre la emisión de tokens.
 
-El laboratorio concluye con la creación de una herramienta Python para facilitar el análisis y la correlación de registros de Microsoft Entra ID.
+El laboratorio concluye con la creación de una herramienta Python para facilitar el análisis y la consulta de registros de Microsoft Entra ID.
 
 ## 4. Tecnologías y competencias practicadas
 
@@ -543,7 +542,7 @@ El laboratorio concluye con la creación de una herramienta Python para facilita
 - **Conditional Access:** configuración y evaluación de políticas de acceso, incluyendo controles MFA y bloqueo de acceso.
 - **Microsoft Authenticator:** análisis de los métodos de autenticación multifactor.
 - **Microsoft Entra Audit Logs:** consulta de registros de auditoría para investigar cambios relacionados con la identidad.
-- **Python:** desarrollo de una herramienta para buscar, filtrar y correlacionar registros de autenticación.
+- **Python:** desarrollo de una herramienta para buscar, filtrar y analizar registros de autenticación.
 - **CSV:** exportación, tratamiento y análisis de registros.
 
 ### Competencias desarrolladas
@@ -551,7 +550,7 @@ El laboratorio concluye con la creación de una herramienta Python para facilita
 - Análisis e interpretación de Microsoft Entra Sign-in Logs.
 - Investigación de errores de autenticación y códigos de error.
 - Diferenciación entre fallos de contraseña y problemas durante MFA.
-- Correlación de eventos mediante identificadores de solicitud (*Request ID*).
+- Análisis y correlación de eventos de autenticación y registros de auditoría.
 - Análisis de resultados de políticas de Conditional Access.
 - Investigación de actividad de identidad mediante Audit Logs.
 - Identificación de discrepancias entre mensajes de diagnóstico y detalles de autenticación.
