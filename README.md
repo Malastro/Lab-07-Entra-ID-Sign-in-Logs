@@ -445,7 +445,7 @@ La mayoría de los eventos corresponden a la aplicación My Profile y todos tien
 
 ![Resumen general de los Sign-in Logs](screenshots/T05-01-Actividad.png)
 
-#### 5.3. 5.3. Análisis conjunto de Sign-in Logs y Authentication Details
+#### 5.3. Análisis conjunto de Sign-in Logs y Authentication Details
 
 Para profundizar en los resultados, se analizaron conjuntamente los Sign-in Logs y Authentication Details.
 
